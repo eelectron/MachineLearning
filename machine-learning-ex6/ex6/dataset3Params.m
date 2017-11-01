@@ -25,11 +25,17 @@ sigma = 0.3;
 CAndSigma = [.01 .03 0.1 0.3 1 3 10 30];
 cvErr = inf;    %%initial error is infinity as we train it will reduce.
 
+%generate all combination using meshgrid
+[Ctemp, sigmaTemp] = meshgrid(CAndSigma, CAndSigma);
+paires = [Ctemp(:) sigmaTemp(:)];
 
-for i = 1:length(CAndSigma)
-    for j = 1:length(CAndSigma)
+for i = 1:length(paires)
+        %current C and sigma
+        CCur = paires(i, 1);
+        sigmaCur = paires(i, 2);
+        
         %train with current C and sigma
-        model = svmTrain(X, y, CAndSigma(i), @(x1, x2)gaussianKernel(x1, x2, CAndSigma(j)));
+        model = svmTrain(X, y, CCur, @(x1, x2)gaussianKernel(x1, x2, sigmaCur));
         
         %compute prediction
         predictions = svmPredict(model, Xval);
@@ -38,11 +44,10 @@ for i = 1:length(CAndSigma)
         err = mean(double(predictions ~= yval)) ;       
         
         if err < cvErr      %if err with current c, sg is less than prev then save current c, sg
-            C = CAndSigma(i);
-            sigma = CAndSigma(j);
+            C = CCur;
+            sigma = sigmaCur;
             cvErr = err;
         end
-    end
 end
 
 
